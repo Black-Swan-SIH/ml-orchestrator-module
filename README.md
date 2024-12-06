@@ -12,7 +12,7 @@
 
 **Why was it needed**
 
-- **Because FastAPI not Fast**: 
+- **Becoz FastAPI not Fast**: 
 
 
 
