@@ -14,6 +14,11 @@ import (
 func GodFunction(filePath string, cfg *config.Config) ([]byte, error) {
 	venv := cfg.Venv
 	scripp := cfg.Parser
+	absoluteFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get absolute file path: %s", err)
+	}
+
 	pythonExecutable := filepath.Join(venv, "Scripts", "python.exe")
 	if runtime.GOOS != "windows" {
 		pythonExecutable = filepath.Join(venv, "bin", "python")
@@ -22,22 +27,17 @@ func GodFunction(filePath string, cfg *config.Config) ([]byte, error) {
 		return nil, fmt.Errorf("Python executable not found: %s", pythonExecutable)
 	}
 
-	// Set up command
-	cmd := exec.Command(pythonExecutable, scripp, filePath)
-
-	// Set PYTHONPATH for the virtual environment
+	cmd := exec.Command(pythonExecutable, scripp, absoluteFilePath)
+	slog.Info("PROCESSOR.GO Filepath is ", string(absoluteFilePath))
 	cmd.Env = append(os.Environ(), "PYTHONPATH="+filepath.Join(venv, "Lib", "site-packages"))
 
-	// Set working directory
 	cmd.Dir = filepath.Dir(scripp)
 
-	// Capture stdout and stderr
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	// Run the command
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("Python script failed: %s, error: %s", stderr.String(), err)
 	}
@@ -50,5 +50,6 @@ func GodFunction(filePath string, cfg *config.Config) ([]byte, error) {
 	}*/
 	slog.Info("Below is output. ")
 	slog.AnyValue(stdout.Bytes())
+	//return storage.Cleanify(stdout.Bytes())
 	return stdout.Bytes(), nil
 }
